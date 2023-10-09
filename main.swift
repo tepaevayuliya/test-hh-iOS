@@ -1,9 +1,9 @@
 class Creature {
-    var attack: Int
-    var protection: Int
-    var initialHealth: Int
+    private var attack: Int
+    private var protection: Int
+    private var initialHealth: Int
     var health: Int
-    var damage: Int
+    private var damage: ClosedRange <Int>
 
     init(N: Int, M: Int, L: Int) {
         if L < 1 {
@@ -19,7 +19,7 @@ class Creature {
         protection = .random(in: 1 ... 30)
         initialHealth = Int.random(in: 1 ... L)
         health = initialHealth
-        damage = .random(in: N ... M)
+        damage = N ... M
     }
 
     func attack(creature: Creature) -> Int {
@@ -35,22 +35,27 @@ class Creature {
         }
 
         if isSuccess {
-            let damageDone = Int.random(in: 1 ... creature.attack)
+            let damageDone = Int.random(in: damage)
+            //Int.random(in: 1 ... creature.attack)
             return damageDone
         } else {
             return 0
         }
     }
+
+    func increaseHeath() -> Int {
+        let healing = Int(0.3 * Double(initialHealth))
+        health = min(health + healing, initialHealth)
+        return health
+    }
 }
 
 class Player: Creature {
-    var countHealving = 4
+    private var countHealving = 4
 
     func healing() {
         if countHealving > 0 {
-            let healing = Int(0.3 * Double(game.player.initialHealth))
-            game.player.health = max(game.player.health + healing, game.player.initialHealth)
-            print("Здоровье игрока после исцеления: \(game.player.health)")
+            print("Здоровье игрока после исцеления: \(increaseHeath())")
             countHealving -= 1
         } else {
             print("Исцеление недоступно")
@@ -72,37 +77,37 @@ class Game {
 
     func playerAttack(monsterIndex: Int) {
         if (monsterIndex > monsters.count - 1) || (monsterIndex < 0) {
-            print("Ошибка. Монстра не существует")
+            print("Ошибка. Монстра \(monsterIndex) не существует")
             return
         } else if monsters[monsterIndex].health == 0 {
-            print("Ошибка. Монстр уже мертв")
+            print("Ошибка. Монстр \(monsterIndex) уже мертв")
             return
         }
 
         let damageDone = player.attack(creature: monsters[monsterIndex])
-        print("Атака игрока: \(damageDone)")
+        print("Урон, нанесенный игроком: \(damageDone)")
         if damageDone >= monsters[monsterIndex].health {
             monsters[monsterIndex].health = 0
-            print("Монстр убит")
+            print("Монстр \(monsterIndex) убит")
         } else {
             monsters[monsterIndex].health -= damageDone
-            print("Здоровье монстра после удара: \(monsters[monsterIndex].health)")
+            print("Здоровье монстра \(monsterIndex) после удара: \(monsters[monsterIndex].health)")
         }
     }
 
     func monsterAttack(monsterIndex: Int) {
         if (monsterIndex > monsters.count - 1) || (monsterIndex < 0) {
-            print("Ошибка. Монстра не существует")
+            print("Ошибка. Монстра \(monsterIndex) не существует")
             return
         } else if monsters[monsterIndex].health == 0 {
-            print("Ошибка. Монстр уже мертв и не может атаковать")
+            print("Ошибка. Монстр \(monsterIndex) уже мертв и не может атаковать")
             return
         } else if player.health == 0 {
             print("Ошибка. Игрок мертв")
             return
         }
         let damageDone = monsters[monsterIndex].attack(creature: player)
-        print("Атака монстра: \(damageDone)")
+        print("Урон, нанесенный монстром \(monsterIndex): \(damageDone)")
         if damageDone >= player.health {
             player.health = 0
             print("Здоровье игрока: 0")
@@ -119,8 +124,9 @@ game.monsterAttack(monsterIndex: 1)
 game.player.healing()
 game.player.healing()
 game.playerAttack(monsterIndex: 1)
-game.playerAttack(monsterIndex: 3) // Ошибка. Монстра не существует
+game.playerAttack(monsterIndex: 3) // Ошибка. Монстра 3 не существует
 game.player.healing()
 game.player.healing()
 game.player.healing() // Исцеление недоступно
 game.player.healing() // Исцеление недоступно
+
